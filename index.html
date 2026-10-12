@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Sentinel Guard | Security Control Center</title>
+    <meta name="description" content="Enterprise Sentinel Guard — AI-powered browser security monitoring system. Real-time webcam person detection.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app" class="app">
+
+    <!-- ======== HEADER ======== -->
+    <header class="header" id="header">
+        <div class="header-left">
+            <div class="header-logo">
+                <div class="logo-icon-wrap">
+                    <svg class="svg-icon logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <path d="m9 12 2 2 4-4"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="header-title">SENTINEL GUARD</h1>
+                    <p class="header-subtitle">AI-POWERED INTRUSION MONITORING</p>
+                </div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="header-clock">
+                <div id="clock" class="clock">00:00:00</div>
+                <div id="date" class="date">LOADING...</div>
+            </div>
+            <div id="privacy-badge" class="privacy-badge" title="All video analysis runs on edge device (browser sandbox)">
+                <svg class="svg-icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <span>EDGE / LOCAL PROCESSING</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ======== STATUS BANNER ======== -->
+    <section id="status-banner" class="status-banner status-disarmed">
+        <div class="status-inner">
+            <div class="status-indicator-wrap">
+                <span id="status-pulse" class="status-pulse"></span>
+            </div>
+            <div class="status-text-wrap">
+                <div id="status-text" class="status-text">SYSTEM DISARMED</div>
+                <div id="status-detail" class="status-detail">System standby — ready for arming</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======== MAIN DASHBOARD GRID ======== -->
+    <main class="dashboard-grid">
+
+        <!-- ---- Camera Panel ---- -->
+        <section class="panel camera-panel" id="camera-panel">
+            <div class="panel-header">
+                <div class="panel-title-wrap">
+                    <svg class="svg-icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                    <span class="panel-title">CAM-01 PRIMARY FEED</span>
+                </div>
+                <span id="camera-status-badge" class="badge badge-offline">OFFLINE</span>
+            </div>
+            <div class="camera-container" id="camera-container">
+                <video id="camera-feed" autoplay playsinline muted></video>
+                <canvas id="detection-canvas"></canvas>
+                <div id="camera-placeholder" class="camera-placeholder">
+                    <div class="camera-placeholder-icon">
+                        <svg class="svg-icon icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                            <circle cx="12" cy="13" r="3"/>
+                        </svg>
+                    </div>
+                    <p class="camera-placeholder-title">CAMERA INACTIVE</p>
+                    <p class="camera-placeholder-hint">Select <strong>ARM SYSTEM</strong> or <strong>DEMO MODE</strong> to initialize video stream</p>
+                </div>
+                <div id="camera-error" class="camera-error hidden">
+                    <div class="camera-error-icon">
+                        <svg class="svg-icon icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                    </div>
+                    <p class="camera-error-title" id="camera-error-title">Camera Feed Error</p>
+                    <p class="camera-error-hint" id="camera-error-hint">
+                        Permission required to access video device.<br>
+                        Check browser security permissions and retry.
+                    </p>
+                </div>
+                <div id="live-indicator" class="live-indicator hidden">
+                    <span class="live-dot"></span> LIVE FEED
+                </div>
+            </div>
+            <div class="camera-info-bar">
+                <span id="detection-status-text" class="detection-info-item">Analytics: Inactive</span>
+                <span id="fps-counter" class="detection-info-item">FPS: —</span>
+                <span id="model-load-status" class="detection-info-item">Model: Unloaded</span>
+            </div>
+        </section>
+
+        <!-- ---- Controls Panel ---- -->
+        <section class="panel controls-panel" id="controls-panel">
+            <div class="panel-header">
+                <div class="panel-title-wrap">
+                    <svg class="svg-icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                    <span class="panel-title">CONTROL INTERFACE</span>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <div class="controls-grid">
+                    <button id="btn-arm" class="ctrl-btn ctrl-btn-arm" title="Arm the security system">
+                        <svg class="svg-icon btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                        <span class="ctrl-label">ARM SYSTEM</span>
+                    </button>
+                    <button id="btn-disarm" class="ctrl-btn ctrl-btn-disarm" disabled title="Disarm the security system">
+                        <svg class="svg-icon btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+                        </svg>
+                        <span class="ctrl-label">DISARM SYSTEM</span>
+                    </button>
+                    <button id="btn-test" class="ctrl-btn ctrl-btn-test" title="Test siren audio synthesis">
+                        <svg class="svg-icon btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                        </svg>
+                        <span class="ctrl-label">SIREN TEST</span>
+                    </button>
+                    <button id="btn-demo" class="ctrl-btn ctrl-btn-demo" title="Toggle simulation mode">
+                        <svg class="svg-icon btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10 2v7.31L4.75 20.5a2 2 0 0 0 1.7 3h11.1a2 2 0 0 0 1.7-3L14 9.31V2"/>
+                            <line x1="8.5" y1="2" x2="15.5" y2="2"/>
+                        </svg>
+                        <span class="ctrl-label">DEMO MODE</span>
+                    </button>
+                    <button id="btn-simulate" class="ctrl-btn ctrl-btn-simulate hidden" title="Simulate intrusion event">
+                        <svg class="svg-icon btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        <span class="ctrl-label">TRIGGER SIMULATION</span>
+                    </button>
+                    <button id="btn-settings" class="ctrl-btn ctrl-btn-settings" title="System parameters">
+                        <svg class="svg-icon btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                        <span class="ctrl-label">CONFIGURATION</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Info Cards -->
+            <div class="info-cards">
+                <div class="info-card">
+                    <span class="info-card-label">VISION MODEL</span>
+                    <span id="info-model" class="info-card-value">Unloaded</span>
+                </div>
+                <div class="info-card">
+                    <span class="info-card-label">CONFIDENCE THRESHOLD</span>
+                    <span id="info-confidence" class="info-card-value">45%</span>
+                </div>
+                <div class="info-card">
+                    <span class="info-card-label">FRAME PERSISTENCE</span>
+                    <span id="info-persistence" class="info-card-value">1 frame</span>
+                </div>
+                <div class="info-card">
+                    <span class="info-card-label">SIMULATION MODE</span>
+                    <span id="info-demo" class="info-card-value value-off">DISABLED</span>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ======== EVENT LOG ======== -->
+    <section class="panel event-log-panel" id="event-log-panel">
+        <div class="panel-header">
+            <div class="panel-title-wrap">
+                <svg class="svg-icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+                <span class="panel-title">SYSTEM AUDIT LOG</span>
+            </div>
+            <button id="btn-clear-log" class="btn-small" title="Clear all log entries">Clear Audit Trail</button>
+        </div>
+        <div id="event-log" class="event-log">
+            <div class="event-log-empty">Audit log empty. All system activities will be recorded here.</div>
+        </div>
+    </section>
+
+    <!-- ======== FOOTER ======== -->
+    <footer class="footer">
+        <p>Sentinel Guard Engine v2.4 &bull; Local Neural Network Inference via WebAssembly/WebGL &bull; Zero Server Data Transfer</p>
+    </footer>
+
+</div>
+
+
+<!-- ======== PIN MODAL ======== -->
+<div id="pin-modal" class="modal-overlay hidden">
+    <div class="modal-box pin-modal-box">
+        <div class="modal-header-bar">
+            <h2 class="modal-title">AUTHENTICATION REQUIRED</h2>
+        </div>
+        <p class="modal-subtitle">Enter security passcode to verify identity and change system state</p>
+        <div id="pin-display" class="pin-display">
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+            <span class="pin-dot"></span>
+        </div>
+        <div id="pin-message" class="pin-message"></div>
+        <div class="pin-keypad">
+            <button class="pin-key" data-key="1">1</button>
+            <button class="pin-key" data-key="2">2</button>
+            <button class="pin-key" data-key="3">3</button>
+            <button class="pin-key" data-key="4">4</button>
+            <button class="pin-key" data-key="5">5</button>
+            <button class="pin-key" data-key="6">6</button>
+            <button class="pin-key" data-key="7">7</button>
+            <button class="pin-key" data-key="8">8</button>
+            <button class="pin-key" data-key="9">9</button>
+            <button class="pin-key pin-key-action" data-key="clear">CLR</button>
+            <button class="pin-key" data-key="0">0</button>
+            <button class="pin-key pin-key-enter" data-key="enter">OK</button>
+        </div>
+        <button id="btn-pin-cancel" class="modal-cancel-btn">Cancel</button>
+    </div>
+</div>
+
+
+<!-- ======== SETTINGS MODAL ======== -->
+<div id="settings-modal" class="modal-overlay hidden">
+    <div class="modal-box settings-modal-box">
+        <div class="modal-header-bar">
+            <h2 class="modal-title">SYSTEM CONFIGURATION</h2>
+            <button id="btn-close-settings-x" class="modal-close-x" title="Close">&times;</button>
+        </div>
+        <div class="settings-scroll">
+            <div class="settings-group">
+                <h3 class="settings-group-title">TIMING PARAMETERS</h3>
+                <div class="setting-row">
+                    <label for="setting-arming-countdown">Arming Delay (seconds)</label>
+                    <input type="number" id="setting-arming-countdown" class="setting-input" min="1" max="30" value="5">
+                </div>
+                <div class="setting-row">
+                    <label for="setting-alarm-countdown">Intrusion Verification Delay (seconds, 0 = Instant Alarm)</label>
+                    <input type="number" id="setting-alarm-countdown" class="setting-input" min="0" max="30" value="0">
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h3 class="settings-group-title">COMPUTER VISION</h3>
+                <div class="setting-row">
+                    <label for="setting-confidence">Detection Confidence Threshold: <span id="confidence-value-label">45%</span></label>
+                    <input type="range" id="setting-confidence" class="setting-range" min="20" max="95" value="45">
+                </div>
+                <div class="setting-row">
+                    <label for="setting-persistence">Required Consecutive Frames</label>
+                    <input type="number" id="setting-persistence" class="setting-input" min="1" max="20" value="1">
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h3 class="settings-group-title">AUDIO &amp; ALARM</h3>
+                <div class="setting-row">
+                    <label for="setting-volume">Alarm Siren Volume: <span id="volume-value-label">80%</span></label>
+                    <input type="range" id="setting-volume" class="setting-range" min="0" max="100" value="80">
+                </div>
+                <div class="setting-row">
+                    <button id="btn-sound-test" class="btn-setting-action">Test Audio Output</button>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h3 class="settings-group-title">CREDENTIAL MANAGEMENT</h3>
+                <div class="setting-row">
+                    <label for="setting-current-pin">Current Passcode</label>
+                    <input type="password" id="setting-current-pin" class="setting-input" maxlength="8" placeholder="Current passcode">
+                </div>
+                <div class="setting-row">
+                    <label for="setting-new-pin">New Passcode</label>
+                    <input type="password" id="setting-new-pin" class="setting-input" maxlength="8" placeholder="New passcode (min 4 digits)">
+                </div>
+                <div class="setting-row">
+                    <button id="btn-change-pin" class="btn-setting-action">Update Passcode</button>
+                    <span id="pin-change-message" class="setting-message"></span>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h3 class="settings-group-title">HARDWARE INPUT</h3>
+                <div class="setting-row">
+                    <label for="setting-camera-select">Video Input Source</label>
+                    <select id="setting-camera-select" class="setting-select">
+                        <option value="">Default Camera Device</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <h3 class="settings-group-title">SIMULATION ENGINE</h3>
+                <div class="setting-row setting-row-toggle">
+                    <label for="setting-demo-toggle">Enable Demo / Simulation Mode</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-demo-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="settings-actions">
+            <button id="btn-save-settings" class="ctrl-btn ctrl-btn-arm settings-save-btn">Save Configuration</button>
+            <button id="btn-close-settings" class="modal-cancel-btn">Cancel</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- ======== COUNTDOWN OVERLAY ======== -->
+<div id="countdown-overlay" class="fullscreen-overlay hidden">
+    <div class="countdown-content">
+        <div id="countdown-title" class="countdown-title">ARMING SYSTEM</div>
+        <div id="countdown-number" class="countdown-number">5</div>
+        <div id="countdown-subtitle" class="countdown-subtitle">Please clear the monitored zone</div>
+    </div>
+</div>
+
+
+<!-- ======== INTRUSION OVERLAY ======== -->
+<div id="intrusion-overlay" class="fullscreen-overlay intrusion-overlay hidden">
+    <div class="intrusion-content">
+        <div class="intrusion-icon-wrap">
+            <svg class="svg-icon intrusion-icon-large" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+        </div>
+        <div class="intrusion-title">INTRUSION DETECTED</div>
+        <div id="intrusion-subtitle" class="intrusion-subtitle">SECURITY ALARM ACTIVE — ENTER PASSCODE TO DISARM</div>
+        <button id="btn-intrusion-disarm" class="ctrl-btn ctrl-btn-disarm intrusion-disarm-btn">
+            <svg class="svg-icon btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+            </svg>
+            <span class="ctrl-label">DISARM SYSTEM</span>
+        </button>
+        <div id="intrusion-demo-label" class="intrusion-demo-label hidden">SIMULATED EVENT</div>
+    </div>
+</div>
+
+
+<!-- ======== AUDIO INIT NOTICE ======== -->
+<div id="audio-init-overlay" class="fullscreen-overlay audio-init-overlay hidden">
+    <div class="audio-init-content">
+        <div class="audio-init-icon">
+            <svg class="svg-icon icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+            </svg>
+        </div>
+        <h2>Audio Driver Permission Required</h2>
+        <p>Browser security requires user interaction to enable real-time siren audio synthesis.</p>
+        <button id="btn-enable-audio" class="ctrl-btn ctrl-btn-arm">Initialize Audio Engine</button>
+    </div>
+</div>
+
+
+<!-- ======== SCRIPTS ======== -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
